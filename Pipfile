@@ -1,0 +1,30 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+fastapi = "*"
+pydantic = "*"
+aiopg = "*"
+boto3 = "*"
+requests = "*"
+requests-aws4auth = "*"
+requests-futures = "*"
+databases = "*"
+asyncpg = "*"
+passlib = "*"
+pyjwt = {extras = ["crypto"], version = "*"}
+uvicorn = "*"
+python-multipart = "*"
+numpy = "*"
+celery = {extras = ["redis"], version = "*"}
+flower = "*"
+elasticsearch = "<7.14.0"
+cbpro = "*"
+nest-asyncio = "*"
+
+[requires]
+python_version = "3.8"

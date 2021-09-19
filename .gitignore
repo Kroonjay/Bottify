@@ -136,3 +136,13 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+#Dev Sandbox Files
+*.sandbox.py
+
+#Celery Database file
+*.db
+
+#Key Material
+bottify_jwt_pt
+bottify_jwt.pem
