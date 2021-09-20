@@ -1,7 +1,8 @@
 from requests import Session
+from requests.exceptions import ReadTimeout
 from json.decoder import JSONDecodeError
 from elasticsearch import Elasticsearch, RequestsHttpConnection, TransportError
-from elasticsearch.helpers import async_bulk, streaming_bulk
+from elasticsearch.helpers import streaming_bulk
 import json
 from typing import Dict
 import logging
@@ -99,6 +100,7 @@ class ElasticApiHelper:
             index_settings.update(settings)
         body = {"settings": index_settings}
         body.update(mappings)
+        retries = 0
         if not self.client:
             self.logger.error("Create Index : ElasticSearch Client is Not Ready")
             return False
@@ -107,6 +109,18 @@ class ElasticApiHelper:
             self.client.indices.create(index=index_name, body=body)
             return True
         except TransportError as te:
+            if isinstance(te, ReadTimeout):
+                if retries < self.max_retries:
+                    retries += 1
+                    self.logger.error(
+                        f"Create Index : ReadTimeout Error from ElasticSearch : Retrying : Attempt {retries} of {self.max_retries}"
+                    )
+                    self.create_index(index_name, mappings, settings)
+                else:
+                    self.logger.error(
+                        "Create Index : ReadTimeout Error from ElasticSearch : Max Retries Exceeded"
+                    )
+                    return False
             err = te.info.get("error")
             if err:
                 if err.get("type") == "resource_already_exists_exception":

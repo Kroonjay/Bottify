@@ -1,4 +1,4 @@
-from pydantic import BaseModel, condecimal, Field
+from pydantic import BaseModel, condecimal, Field, validator
 from uuid import uuid4, UUID
 from typing import Optional, List
 from decimal import Decimal
@@ -82,6 +82,25 @@ class BittrexTradeModel(BaseModel):
     isTaker: bool
 
 
+class BittrexPublicTradeModel(BaseModel):
+    id: str = Field(alias="_id")
+    market_symbol: str
+    executedAt: datetime = Field(alias="time")
+    quantity: Decimal
+    rate: Decimal
+    takerSide: str = Field(alias="side")
+    snapshot: Optional[int] = None
+
+    @validator("takerSide")
+    def taker_side_to_lower(cls, v):
+        assert v, "Taker Side is Required"
+        return v.lower()
+
+    class Config:
+        allow_population_by_field_name = True
+        extra = "ignore"
+
+
 class BittrexBalanceModel(BaseModel):
     symbol: str = Field(
         alias="currencySymbol"
@@ -108,7 +127,19 @@ class BittrexMarketModel(BaseModel):
 
 
 class BittrexTickerModel(BaseModel):
-    symbol: str
-    price: Decimal = Field(alias="lastTradeRate")  # Just call it price ffs?
-    bidRate: Decimal
-    askRate: Decimal
+    symbol: str = Field(alias="market_symbol")
+    lastTradeRate: Decimal = Field(alias="price")  # Just call it price ffs?
+    bidRate: Decimal = Field(alias="bid")
+    askRate: Decimal = Field(alias="ask")
+    snapshot: Optional[int] = None
+    time: datetime = None
+
+    @validator("time", pre=True, always=True)
+    def set_ts_now(cls, v):
+        return v or datetime.now(
+            tz=timezone.utc
+        )  # Required else all models will share a timestamp generated when the model is imported
+
+    class Config:
+        allow_population_by_field_name = True
+        extra = "ignore"

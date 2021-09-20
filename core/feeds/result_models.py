@@ -5,11 +5,15 @@ from core.exchanges.coinbase.models import (
     CoinbaseDailyCurrencyStatModel,
 )
 from core.feeds.coinmarketcap.currency_info_feed import CoinMarketCapCurrencyInfoModel
+from core.exchanges.bittrex.models import BittrexPublicTradeModel, BittrexTickerModel
+
 
 feed_result_models = {
     FeedSources.CoinMarketCapCurrencyInfo: CoinMarketCapCurrencyInfoModel,
     FeedSources.CoinbaseTrades: CoinbasePublicTradeModel,
     FeedSources.CoinbaseDailyCurrencyStats: CoinbaseDailyCurrencyStatModel,
+    FeedSources.BittrexTrades: BittrexPublicTradeModel,
+    FeedSources.BittrexTickers: BittrexTickerModel,
 }
 
 

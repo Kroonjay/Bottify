@@ -3,7 +3,7 @@ from elasticsearch import Elasticsearch, RequestsHttpConnection
 from elasticsearch.serializer import JSONSerializer
 from requests_aws4auth import AWS4Auth
 import boto3
-from elasticsearch.helpers import async_bulk, streaming_bulk
+from elasticsearch.helpers import streaming_bulk
 from pydantic import BaseModel
 import urllib3
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects

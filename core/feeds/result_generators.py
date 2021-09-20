@@ -2,15 +2,21 @@ from enum import Enum
 import logging
 from core.enums.feed_sources import FeedSources
 from core.feeds.coinmarketcap.currency_info_feed import cmc_currency_result_generator
-from core.feeds.coinbase.public_trades_feed import public_trade_result_generator
+from core.feeds.coinbase.public_trades_feed import (
+    coinbase_public_trade_result_generator,
+)
 from core.feeds.coinbase.daily_currency_stats_feed import (
     daily_currency_stats_result_generator,
 )
+from core.feeds.bittrex.public_trades_feed import bittrex_public_trade_result_generator
+from core.feeds.bittrex.tickers_feed import bittrex_ticker_result_generator
 
 feed_result_generators = {
     FeedSources.CoinMarketCapCurrencyInfo: cmc_currency_result_generator,
-    FeedSources.CoinbaseTrades: public_trade_result_generator,
+    FeedSources.CoinbaseTrades: coinbase_public_trade_result_generator,
     FeedSources.CoinbaseDailyCurrencyStats: daily_currency_stats_result_generator,
+    FeedSources.BittrexTrades: bittrex_public_trade_result_generator,
+    FeedSources.BittrexTickers: bittrex_ticker_result_generator,
 }
 
 

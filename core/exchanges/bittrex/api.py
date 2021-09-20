@@ -9,12 +9,14 @@ from core.config import (
     BITTREX_API_KEY,
     BITTREX_API_TIMEOUT_SECONDS,
 )
+from core.enums.http_request_types import HttpRequestType
 from core.exchanges.bittrex.models import (
     BittrexBalanceModel,
     BittrexMarketModel,
     BittrexTradeModel,
     BittrexTickerModel,
     BittrexOrderModel,
+    BittrexPublicTradeModel,
 )
 from core.exchanges.bittrex.transformers import transform_trade_bittrex
 from requests import Session
@@ -69,6 +71,9 @@ class BittrexApiHelper:
         self.session = Session()
         self.is_ready = False
         self.timeout = BITTREX_API_TIMEOUT_SECONDS
+        self.sequence_header_name = (
+            "Sequence"  # Used for Head requests to return current sequence value
+        )
 
     # TODO Change this to support different accounts for different users somehow
     def set_auth(self, uri, method, body=None):
@@ -111,6 +116,10 @@ class BittrexApiHelper:
         use_auth: bool = True,
     ):
         url = get_request_url(self.base_url, endpoint)
+        if isinstance(method, HttpRequestType):
+            method_str = method.value
+        else:
+            method_str = method
         if not url:
             self.logger.error(f"Make Request : Request URL is None")
             return None
@@ -119,7 +128,11 @@ class BittrexApiHelper:
 
         try:
             response = self.session.request(
-                method=method, url=url, data=body, timeout=self.timeout, params=params
+                method=method_str,
+                url=url,
+                data=body,
+                timeout=self.timeout,
+                params=params,
             )
         except ReadTimeout as rt:
             self.logger.error(
@@ -131,9 +144,14 @@ class BittrexApiHelper:
                 f"Make Request : Response Status Code indicates an Error : Status Code {response.status_code}"
             )
         try:
-            return response.json()
+            if method == HttpRequestType.Head:
+                return response.headers
+            else:
+                return response.json()
         except JSONDecodeError as jde:
-            self.logger.error(f"Make Request : JSON Decode Error : {jde}")
+            self.logger.error(
+                f"Make Request : JSON Decode Error : {jde} : Response {response.text}"
+            )
             return None
 
     def get_account(self):
@@ -209,7 +227,7 @@ class BittrexApiHelper:
             logging.error("Get Trades by Order : No Results")
         return trades
 
-    def get_trades(
+    def get_executions(
         self,
         market_symbol: str = None,
         limit: int = 200,
@@ -280,3 +298,42 @@ class BittrexApiHelper:
                 f"Get Order : BittrexOrderModel : ValidationError : {ve.json()}"
             )
             return None
+
+    def generate_public_trades(self, market_symbol: str):
+        endpoint = f"markets/{market_symbol}/trades"
+        response = self.make_request(method="GET", endpoint=endpoint)
+        if not response:
+            self.logger.error("Generate Public Trades : Invalid API Response")
+            return
+        for item in response:
+            try:
+                yield BittrexPublicTradeModel(market_symbol=market_symbol, **item)
+            except ValidationError as ve:
+                self.logger.error(
+                    f"Generate Public Trades : BittrexTradeModel : ValidationError : {ve.json()} : Data {item}"
+                )
+                continue
+            except TypeError as te:
+                self.logger.error(
+                    f"Generate Public Trades : BittrexTradeModel : TypeError : {str(te)} :  Type {type(item)} : Data {item}"
+                )
+
+    def get_trade_sequence(self, market_symbol: str):
+        endpoint = f"markets/{market_symbol}/trades"
+        response = self.make_request(
+            method=HttpRequestType.Head, endpoint=endpoint, use_auth=False
+        )
+        if not response:
+            self.logger.error("Get Trade Sequence : Invalid API Response")
+            return None
+        return response.get(self.sequence_header_name)
+
+    def get_ticker_sequence(self):
+        endpoint = "markets/tickers"
+        response = self.make_request(
+            method=HttpRequestType.Head, endpoint=endpoint, use_auth=False
+        )
+        if not response:
+            self.logger.error(f"Get Ticker Sequence : Invalid API Response")
+            return None
+        return response.get(self.sequence_header_name)

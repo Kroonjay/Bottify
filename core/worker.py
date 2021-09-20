@@ -51,7 +51,9 @@ from core.config import (
     MAIN_DB_CONN_STRING,
 )
 from core.elasticsearch.utils import bulk_index
+import nest_asyncio  # Required in order to call and execute async tasks from inside a running event loop
 
+nest_asyncio.apply()
 
 bottify_worker = Celery(CELERY_WORKER_NAME)
 bottify_worker.conf.broker_url = CELERY_BROKER_URL
