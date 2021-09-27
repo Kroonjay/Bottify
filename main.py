@@ -36,3 +36,7 @@ def main():
     uvicorn.run(
         app, host=SERVER_HOST, port=SERVER_PORT, debug=DEBUG_ENABLED, reload=True
     )
+
+
+if __name__ == "__main__":
+    main()

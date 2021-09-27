@@ -31,3 +31,10 @@ class BittrexOrderStatus(Enum):
 class BittrexMarketStatus(Enum):
     Active = "ONLINE"
     Disabled = "OFFLINE"
+
+
+class BittrexCandleLength(Enum):
+    OneMinute = "MINUTE_1"
+    FiveMinutes = "MINUTE_5"
+    OneHour = "HOUR_1"
+    OneDay = "DAY_1"

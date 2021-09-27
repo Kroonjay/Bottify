@@ -20,7 +20,7 @@ from pydantic import BaseModel
 import boto3
 import asyncio
 
-
+# DEPRECATED
 class FeederConfigModel(BaseModel):
     interval_seconds: int = 60
 

@@ -42,3 +42,12 @@ class CoinbaseOrderStatus(Enum):
     Active = "active"
     Closed = "done"
     All = "all"
+
+
+class CoinbaseCandleLength(Enum):
+    OneMinute = 60
+    FiveMinutes = 300
+    FifteenMinutes = 900
+    OneHour = 3600
+    SixHours = 21600
+    OneDay = 86400

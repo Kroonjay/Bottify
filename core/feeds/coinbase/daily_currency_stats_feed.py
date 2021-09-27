@@ -1,8 +1,6 @@
 import asyncio
 import logging
-import nest_asyncio
 
-nest_asyncio.apply()
 from core.database.database import create_db
 from core.feeds.helpers import action_wrapper
 from core.database.crud.exchange import read_exchange_by_id

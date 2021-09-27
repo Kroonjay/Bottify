@@ -22,9 +22,11 @@ python-multipart = "*"
 numpy = "*"
 celery = {extras = ["redis"], version = "*"}
 flower = "*"
-elasticsearch = "<7.14.0"
 cbpro = "*"
 nest-asyncio = "*"
+python-jose = "*"
+pandas = "*"
+elasticsearch = "<7.14.0"
 
 [requires]
 python_version = "3.8"

@@ -55,3 +55,21 @@ async def read_all_currencies(database: Database, limit: int):
     if not currencies:
         logging.error(f"Read All Currencies : No Results")
     return currencies
+
+
+async def read_currencies_by_tags(database: Database, input_tags: list, limit: int):
+    currencies = []
+    if not isinstance(input_tags, list):
+        logging.error(
+            f"Read Currencies with Tags : Tags must be a List of Strings : Got {type(input_tags)}"
+        )
+        return currencies
+    for currency in await read_all_currencies(database, limit):
+        if not currency.tags:
+            continue
+        for tag in currency.tags:
+            if tag in input_tags:
+                currencies.append(currency)
+    if not currencies:
+        logging.debug("Read Currencies with Tags : No Results")
+    return currencies

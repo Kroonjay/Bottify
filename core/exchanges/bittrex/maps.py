@@ -1,10 +1,11 @@
 import logging
-
+from core.enums.candle_length import CandleLength
 from core.enums.orders import OrderDirection, OrderTimeInForce, OrderType
 from core.exchanges.bittrex.enums import (
     BittrexOrderDirection,
     BittrexOrderType,
     BittrexTimeInForce,
+    BittrexCandleLength,
 )
 
 order_direction_map = {
@@ -26,6 +27,13 @@ time_in_force_map = {
     OrderTimeInForce.PostOnlyGoodTilCancelled: BittrexTimeInForce.PostOnlyGoodTilCancelled,
     OrderTimeInForce.BuyNow: BittrexTimeInForce.BuyNow,
     OrderTimeInForce.Instant: BittrexTimeInForce.Instant,
+}
+
+candle_length_map = {
+    CandleLength.OneMinute: BittrexCandleLength.OneMinute,
+    CandleLength.FiveMinutes: BittrexCandleLength.FiveMinutes,
+    CandleLength.OneHour: BittrexCandleLength.OneHour,
+    CandleLength.OneDay: BittrexCandleLength.OneDay,
 }
 
 
@@ -54,3 +62,20 @@ def map_bittrex_time_in_force(time_in_force: OrderTimeInForce):
         )
         return None
     return time_in_force_map.get(time_in_force)
+
+
+def map_bittrex_candle_length(candle_length: CandleLength):
+    default_candle_length = BittrexCandleLength.OneHour
+    if not isinstance(candle_length, CandleLength):
+        logging.error(
+            f"Map Bittrex Candle Length : Input Must be a CandleLength Enum : Got {type(candle_length)}"
+        )
+        return None
+    candle_length = candle_length_map.get(candle_length)
+    if candle_length:
+        return candle_length
+    else:
+        logging.error(
+            f"Map Bittrex Candle Length : Candle Length {str(candle_length)} Not Supported on Bittrex : Using Default {default_candle_length}"
+        )
+        return default_candle_length

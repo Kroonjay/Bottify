@@ -5,6 +5,7 @@ from sqlalchemy import and_
 from core.database.helpers import build_model_from_row, write_db
 from core.database.tables.market import get_market_table
 from core.models.market import MarketInModel, MarketModel
+from core.enums.statuses import BottifyStatus
 
 market_table = get_market_table()
 
@@ -31,6 +32,89 @@ async def read_all_markets(database: Database, limit: int):
         markets.append(build_model_from_row(row, MarketModel))
     if not markets:
         logging.error(f"Read All Markets : No Results")
+    return markets
+
+
+async def read_markets_by_status(database: Database, status: BottifyStatus):
+    markets = []
+    if not isinstance(status, BottifyStatus):
+        logging.error(
+            f"Read Markets by Status : Status Must be type BottifyStatus : Got {type(status)}"
+        )
+        return markets
+    query = market_table.select().where(market_table.c.status == status.value)
+    async for row in database.iterate(query):
+        markets.append(build_model_from_row(row, MarketModel))
+    if not markets:
+        logging.debug("Read Markets by Status : No Results")
+    return markets
+
+
+async def read_active_markets(database: Database):
+    return await read_markets_by_status(database, BottifyStatus.Active)
+
+
+async def read_markets_by_tags(database: Database, input_tags: list):
+    markets = []
+    if not isinstance(input_tags, list):
+        logging.error(
+            f"Read Markets with Tags : Tags must be a List of Strings : Got {type(input_tags)}"
+        )
+        return markets
+    query = market_table.select().where(market_table.c.tags != None)
+    async for row in database.iterate(query):
+        market = build_model_from_row(row, MarketModel)
+        if not market:
+            continue
+        for tag in market.tags:
+            if tag in input_tags:
+                markets.append(build_model_from_row(row, MarketModel))
+    if not markets:
+        logging.debug("Read Markets with Tags : No Results")
+    return markets
+
+
+def sync_read_markets_by_tags(connection, input_tags: list):
+    markets = []
+    if not isinstance(input_tags, list):
+        logging.error(
+            f"Read Markets with Tags : Tags must be a List of Strings : Got {type(input_tags)}"
+        )
+        return markets
+    query = market_table.select().where(market_table.c.tags != None)
+    for row in connection.execute(query):
+        market = build_model_from_row(row, MarketModel)
+        if not market:
+            continue
+        for tag in market.tags:
+            if tag in input_tags:
+                markets.append(build_model_from_row(row, MarketModel))
+    if not markets:
+        logging.debug("Read Markets with Tags : No Results")
+    return markets
+
+
+async def read_markets_by_exchange_tags(
+    database: Database, exchange_id: int, input_tags: list
+):
+    markets = []
+    if not isinstance(input_tags, list):
+        logging.error(
+            f"Read Markets by Exchange Tags : Input Tags Must be a List of Strings : Got {type(input_tags)}"
+        )
+        return markets
+    query = market_table.select().where(
+        market_table.c.exchange_id == exchange_id, market_table.c.tags != None
+    )
+    async for row in database.iterate(query):
+        market = build_model_from_row(row, MarketModel)
+        if not market:
+            continue
+        for tag in market.tags:
+            if tag in input_tags:
+                markets.append(build_model_from_row(row, MarketModel))
+    if not markets:
+        logging.debug("Read Markets by Exchange Tags : No Results")
     return markets
 
 

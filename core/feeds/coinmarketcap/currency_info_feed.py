@@ -80,7 +80,7 @@ def parse_currency_info_result(result):
         return None
 
 
-def cmc_currency_result_generator(configs: dict):
+def cmc_currency_result_generator(configs: dict, **kwargs):
     if not configs:
         logging.error(
             "CoinMarketCap Currency Result Generator : Config is Missing or Invalid"

@@ -4,7 +4,7 @@ import logging
 from core.feeds.bittrex.helpers import fetch_markets
 
 
-def bittrex_ticker_result_generator(configs: dict):
+def bittrex_ticker_result_generator(configs: dict, **kwargs):
     exchange_id_config_name = "exchange_id"
     exchange_id = configs.get(exchange_id_config_name)
     if not exchange_id:

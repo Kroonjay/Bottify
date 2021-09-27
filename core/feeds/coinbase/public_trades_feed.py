@@ -35,7 +35,7 @@ def fetch_last_trade_id(es_client, index_name, market_symbol):
         return results[0].get("_source").get("trade_id")
 
 
-def coinbase_public_trade_result_generator(configs: dict):
+def coinbase_public_trade_result_generator(configs: dict, **kwargs):
     exchange_id = configs.get("exchange_id")
     if not exchange_id:
         logging.error(

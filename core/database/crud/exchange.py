@@ -80,6 +80,13 @@ async def read_exchange_by_id(database: Database, exchange_id: int):
     return build_model_from_row(row, ExchangeModel)
 
 
+def sync_read_exchange_by_id(connection, exchange_id: int):
+    query = exchange_table.select().where(exchange_table.c.id == exchange_id).limit(1)
+    results = connection.execute(query)
+    for row in results:
+        return build_model_from_row(row, ExchangeModel)
+
+
 async def read_active_exchanges_by_user(database: Database, user_id: int):
     exchanges = []
     if not isinstance(user_id, int):

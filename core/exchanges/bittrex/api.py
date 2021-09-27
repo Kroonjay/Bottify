@@ -5,8 +5,6 @@ from uuid import UUID
 from pydantic import ValidationError
 from core.config import (
     BITTREX_BASE_URL,
-    BITTREX_API_SECRET,
-    BITTREX_API_KEY,
     BITTREX_API_TIMEOUT_SECONDS,
 )
 from core.enums.http_request_types import HttpRequestType
@@ -17,8 +15,12 @@ from core.exchanges.bittrex.models import (
     BittrexTickerModel,
     BittrexOrderModel,
     BittrexPublicTradeModel,
+    BittrexCandleModel,
 )
+from core.exchanges.bittrex.enums import BittrexCandleLength
+from core.exchanges.bittrex.maps import map_bittrex_candle_length
 from core.exchanges.bittrex.transformers import transform_trade_bittrex
+from core.enums.candle_length import CandleLength
 from requests import Session
 from requests.exceptions import ConnectionError, ReadTimeout
 from typing import Dict
@@ -135,13 +137,13 @@ class BittrexApiHelper:
                 params=params,
             )
         except ReadTimeout as rt:
-            self.logger.error(
+            self.logger.critical(
                 f"Make Request : API Operation Timeout : Max Timeout {self.timeout}"
             )
             return None
         if not response.ok:
-            self.logger.error(
-                f"Make Request : Response Status Code indicates an Error : Status Code {response.status_code}"
+            self.logger.critical(
+                f"Make Request : Response Status Code indicates an Error : Status Code {response.status_code} : Endpoint: {url} : Data {response.text}"
             )
         try:
             if method == HttpRequestType.Head:
@@ -149,8 +151,8 @@ class BittrexApiHelper:
             else:
                 return response.json()
         except JSONDecodeError as jde:
-            self.logger.error(
-                f"Make Request : JSON Decode Error : {jde} : Response {response.text}"
+            self.logger.critical(
+                f"Make Request : JSON Decode Error : {jde} : Data {response.text}"
             )
             return None
 
@@ -334,6 +336,43 @@ class BittrexApiHelper:
             method=HttpRequestType.Head, endpoint=endpoint, use_auth=False
         )
         if not response:
-            self.logger.error(f"Get Ticker Sequence : Invalid API Response")
+            self.logger.error("Get Ticker Sequence : Invalid API Response")
             return None
         return response.get(self.sequence_header_name)
+
+    def generate_candles(self, symbol: str, length: CandleLength, start: datetime):
+        candle_interval = map_bittrex_candle_length(length)
+        endpoint = None
+        if (
+            candle_interval == BittrexCandleLength.OneMinute
+            or candle_interval == BittrexCandleLength.FiveMinutes
+        ):
+            endpoint = f"markets/{symbol}/candles/{candle_interval.value}/historical/{start.year}/{start.month}/{start.day}"
+        elif candle_interval == BittrexCandleLength.OneHour:
+            endpoint = f"markets/{symbol}/candles/{candle_interval.value}/historical/{start.year}/{start.month}"
+        elif candle_interval == BittrexCandleLength.OneDay:
+            endpoint = f"markets/{symbol}/candles/{candle_interval.value}/historical/{start.year}"
+        else:
+            self.logger.error(
+                f"Bittrex Generate Candles : Invalid Length : Got {str(length)}"
+            )
+            return
+        response = self.make_request(
+            method=HttpRequestType.Get, endpoint=endpoint, use_auth=False
+        )
+        if not response:
+            self.logger.error("Bittrex Generate Candles : Invalid API Response")
+            return None
+        for item in response:
+            try:
+                yield BittrexCandleModel(
+                    exchange_id=self.exchange_id,
+                    market_symbol=symbol,
+                    length=length,
+                    **item,
+                )
+            except ValidationError as ve:
+                self.logger.error(
+                    f"Bittrex Generate Candles : ValidationError : BittrexCandleModel : {ve.json()}"
+                )
+                continue

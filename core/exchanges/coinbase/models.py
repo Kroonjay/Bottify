@@ -3,6 +3,7 @@ from uuid import uuid4, UUID
 from typing import Optional, List
 from decimal import Decimal
 from datetime import datetime, timezone
+from core.enums.candle_length import CandleLength
 from core.config import BALANCE_DECIMAL_PRECISION, BALANCE_MAXIMUM_DIGITS
 from core.exchanges.coinbase.enums import (
     CoinbaseOrderDirection,
@@ -150,29 +151,35 @@ class CoinbaseApiTickerModel(BaseModel):
 
 
 class CoinbaseSocketTickerModel(BaseModel):
-    sequence: int
-    product_id: str
+    sequence: str
+    product_id: str = Field(alias="market_symbol")
     price: Decimal
     open_24h: Decimal
     volume_24h: Decimal
     low_24h: Decimal
     high_24h: Decimal
     volume_30d: Decimal
-    best_bid: Decimal
-    best_ask: Decimal
+    best_bid: Decimal = Field(
+        alias="bid"
+    )  # Required for commonality with other exchanges
+    best_ask: Decimal = Field(alias="ask")
     side: str
     time: datetime
     trade_id: int
     last_size: Decimal
+
+    class Config:
+        extra = "ignore"
+        allow_population_by_field_name = True
 
 
 class CoinbaseSocketFeederConfig(BaseModel):
     exchange_id: int
     channels: List[str]
     socket_url: str
-    products_url: str
     products: Optional[List[str]] = None
     ticker_index_name: str = None
+    max_retries: int = 10
 
 
 class CoinbasePublicTradeModel(BaseModel):
@@ -204,3 +211,15 @@ class CoinbaseDailyCurrencyStatModel(BaseModel):
     volume: Decimal
     last: Decimal
     volume_30d: Decimal = Field(alias="volume_30day")
+
+
+class CoinbaseCandleModel(BaseModel):
+    exchange_id: int
+    market_symbol: str
+    length: CandleLength
+    low: Decimal
+    high: Decimal
+    open: Decimal
+    close: Decimal
+    volume: Decimal
+    time: datetime

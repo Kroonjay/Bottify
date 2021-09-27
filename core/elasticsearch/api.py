@@ -1,7 +1,11 @@
 from requests import Session
 from requests.exceptions import ReadTimeout
 from json.decoder import JSONDecodeError
-from elasticsearch import Elasticsearch, RequestsHttpConnection, TransportError
+from elasticsearch import (
+    Elasticsearch,
+    RequestsHttpConnection,
+    TransportError,
+)
 from elasticsearch.helpers import streaming_bulk
 import json
 from typing import Dict
@@ -16,7 +20,7 @@ from core.config import (
 from core.elasticsearch.transformers import transform_monitor
 from core.elasticsearch.utils import get_aws_auth
 
-
+# Can't use this lib's async client until we move off AWS OpenSearch :/ Upgrading will throw UnsupportedDistributionError if we move any higher than 7.1.3
 class ElasticApiHelper:
     def __init__(self):
         self.logger = logging.getLogger("Bottify.ElasticApi")
@@ -28,7 +32,7 @@ class ElasticApiHelper:
         self.port = 443
         self.use_ssl = True
         self.verify_certs = True
-        self.max_retries = 10
+        self.max_retries = 2
         self.conn_cls = RequestsHttpConnection
         self.session = Session()
         self.client = None
@@ -109,19 +113,17 @@ class ElasticApiHelper:
             self.client.indices.create(index=index_name, body=body)
             return True
         except TransportError as te:
-            if isinstance(te, ReadTimeout):
-                if retries < self.max_retries:
-                    retries += 1
-                    self.logger.error(
-                        f"Create Index : ReadTimeout Error from ElasticSearch : Retrying : Attempt {retries} of {self.max_retries}"
-                    )
+
+            try:
+                err = te.info.get("error")
+            except AttributeError as ae:
+                err = None
+                if isinstance(te.info, ReadTimeout):
+                    logging.error(f"Create Index : ReadTimeout : Retrying")
                     self.create_index(index_name, mappings, settings)
                 else:
-                    self.logger.error(
-                        "Create Index : ReadTimeout Error from ElasticSearch : Max Retries Exceeded"
-                    )
+                    logging.error(f"Create Index : Unknown Error : Exiting")
                     return False
-            err = te.info.get("error")
             if err:
                 if err.get("type") == "resource_already_exists_exception":
                     self.logger.error(
@@ -149,8 +151,12 @@ class ElasticApiHelper:
             client=self.client,
             index=index_name,
             actions=result_generator,
-            max_retries=self.max_retries,
-            request_timeout=30,
+            raise_on_exception=False,  # Don’t propagate exceptions from call to bulk and just report the items that failed as failed
+            raise_on_error=False,  # Don't raise BulkIndexError containing errors (as .errors) from the execution of the last chunk when some occur.
+            max_retries=self.max_retries,  # maximum number of times a document will be retried when 429 is received
+            initial_backoff=2,
+            max_backoff=600,
+            request_timeout=60,
         ):
             self.logger.debug(
                 f"Index Generator : Document Indexed Successfully : Result {ok} : Action {action}"
@@ -158,11 +164,11 @@ class ElasticApiHelper:
         return
 
     def index_one(self, index_name: str, doc_id: str, data: str):
-        if not isinstance(data, str):
-            self.logger.error(
-                f"Index One : Input Data Must be a JSON String : Got {type(data)}"
-            )
-            return
+        # if not isinstance(data, str):
+        #     self.logger.error(
+        #         f"Index One : Input Data Must be a JSON String : Got {type(data)}"
+        #     )
+        #     return
         if not self.client:
             self.logger.error("Index One : ElasticSearch Client is Not Ready")
             return

@@ -10,6 +10,7 @@ from core.feeds.coinbase.daily_currency_stats_feed import (
 )
 from core.feeds.bittrex.public_trades_feed import bittrex_public_trade_result_generator
 from core.feeds.bittrex.tickers_feed import bittrex_ticker_result_generator
+from core.feeds.exchange.candles_feed import candle_result_generator
 
 feed_result_generators = {
     FeedSources.CoinMarketCapCurrencyInfo: cmc_currency_result_generator,
@@ -17,6 +18,7 @@ feed_result_generators = {
     FeedSources.CoinbaseDailyCurrencyStats: daily_currency_stats_result_generator,
     FeedSources.BittrexTrades: bittrex_public_trade_result_generator,
     FeedSources.BittrexTickers: bittrex_ticker_result_generator,
+    FeedSources.Candles: candle_result_generator,
 }
 
 

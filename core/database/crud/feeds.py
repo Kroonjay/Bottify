@@ -1,7 +1,7 @@
 from core.database.tables.feeds import get_feeds_table
 from core.database.helpers import build_model_from_row, write_db
 from core.enums.statuses import BottifyStatus
-from core.enums.feed_types import FeedTypes
+from core.enums.feed_sources import FeedSources
 from core.models.feed import FeedInModel, FeedModel
 from databases import Database
 from sqlalchemy import and_
@@ -27,6 +27,21 @@ async def read_feed_by_id(database: Database, feed_id: int):
     return build_model_from_row(row, FeedModel)
 
 
+async def read_feeds_by_status(database: Database, status: BottifyStatus):
+    feeds = []
+    if not isinstance(status, BottifyStatus):
+        logging.error(
+            f"Read Feeds by Status : Status Must be type BottifyStatus : Got {type(status)}"
+        )
+        return feeds
+    query = feed_table.select().where(feed_table.c.status == status.value)
+    async for row in database.iterate(query):
+        feeds.append(build_model_from_row(row, FeedModel))
+    if not feeds:
+        logging.error(f"Read Feeds by Status : No Results : Status {str(status)}")
+    return feeds
+
+
 async def read_all_feeds(database: Database, limit: int):
     feeds = []
     query = feed_table.select().limit(limit)
@@ -37,6 +52,7 @@ async def read_all_feeds(database: Database, limit: int):
     return feeds
 
 
+# TODO Update this to use read_feeds_by_status and deprecate the limit param
 async def read_active_feeds(database: Database, limit: int = None) -> List[FeedModel]:
     feeds = []
     if limit:
@@ -56,14 +72,12 @@ async def read_active_feeds(database: Database, limit: int = None) -> List[FeedM
     return feeds
 
 
+async def read_busy_feeds(database: Database) -> List[FeedModel]:
+    return await read_feeds_by_status(database, BottifyStatus.Busy)
+
+
 async def read_new_feeds(database: Database) -> List[FeedModel]:
-    query = feed_table.select().where(feed_table.c.status == BottifyStatus.New.value)
-    feeds = []
-    async for row in database.iterate(query):
-        feeds.append(build_model_from_row(row, FeedModel))
-    if not feeds:
-        logging.error(f"Read New Feeds : No Results")
-    return feeds
+    return await read_feeds_by_status(database, BottifyStatus.New)
 
 
 async def read_next_overdue_active_feed(database: Database):
@@ -99,6 +113,26 @@ async def read_overdue_active_feeds(database: Database):
     if not feeds:
         logging.error(f"Read Overdue Active Feeds : No Results")
     return feeds
+
+
+async def read_active_feed_by_type(database: Database, feed_type: FeedSources):
+    if not isinstance(feed_type, FeedSources):
+        logging.error(
+            f"Read Active Feed by Type : Feed Type must be FeedSources : Got {type(feed_type)}"
+        )
+        return None
+    query = (
+        feed_table.select()
+        .where(
+            and_(
+                feed_table.c.feed_type == feed_type.value,
+                feed_table.c.status == BottifyStatus.Active.value,
+            )
+        )
+        .limit(1)
+    )
+    row = await database.fetch_one(query)
+    return build_model_from_row(row, FeedModel)
 
 
 async def update_feed_status(

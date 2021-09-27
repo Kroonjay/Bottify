@@ -3,6 +3,7 @@ from uuid import uuid4, UUID
 from typing import Optional, List
 from decimal import Decimal
 from datetime import datetime, timezone
+from core.enums.candle_length import CandleLength
 from core.config import BALANCE_DECIMAL_PRECISION, BALANCE_MAXIMUM_DIGITS
 from core.exchanges.bittrex.enums import (
     BittrexOrderDirection,
@@ -86,8 +87,8 @@ class BittrexPublicTradeModel(BaseModel):
     id: str = Field(alias="_id")
     market_symbol: str
     executedAt: datetime = Field(alias="time")
-    quantity: Decimal
-    rate: Decimal
+    quantity: Decimal = Field(alias="size")
+    rate: Decimal = Field(alias="price")  # Required for commonality across exchanges
     takerSide: str = Field(alias="side")
     snapshot: Optional[int] = None
 
@@ -143,3 +144,18 @@ class BittrexTickerModel(BaseModel):
     class Config:
         allow_population_by_field_name = True
         extra = "ignore"
+
+
+class BittrexCandleModel(BaseModel):
+    exchange_id: int
+    market_symbol: str
+    length: CandleLength
+    low: Decimal
+    high: Decimal
+    open: Decimal
+    close: Decimal
+    volume: Decimal
+    time: datetime = Field(alias="startsAt")
+
+    class Config:
+        extra = "ignore"  # Ignores quoteVolume which isn't supported on Coinbase :/

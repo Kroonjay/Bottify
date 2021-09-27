@@ -7,6 +7,7 @@ from uuid import UUID
 from hashlib import sha256
 from cbpro import AuthenticatedClient
 from pydantic import ValidationError
+from core.enums.candle_length import CandleLength
 from core.exchanges.coinbase.enums import CoinbaseOrderStatus
 from core.config import COINBASE_BASE_URL, COINBASE_API_TIMEOUT_SECONDS
 from core.exchanges.coinbase.models import (
@@ -17,17 +18,19 @@ from core.exchanges.coinbase.models import (
     CoinbaseApiTickerModel,
     CoinbasePublicTradeModel,
     CoinbaseDailyCurrencyStatModel,
+    CoinbaseCandleModel,
 )
 from core.exchanges.coinbase.transformers import (
     transform_order_create_to_coinbase,
     transform_coinbase_order,
     transform_trade_coinbase,
 )
+from core.exchanges.coinbase.maps import map_coinbase_candle_length
 from requests import Session
 from requests.exceptions import ConnectionError, ReadTimeout
 from requests.auth import AuthBase
 from typing import Dict, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import hmac
 from json.decoder import JSONDecodeError
 
@@ -98,6 +101,7 @@ class CoinbaseApiHelper:
         self.client = AuthenticatedClient(
             self.api_key, self.api_secret, self.api_passphrase, api_url=self.base_url
         )
+        self.candle_request_limit = 300  # API requests fail if we try to get more than 300 candles, may change in future
 
     def set_auth(self):
         return CoinbaseExchangeAuth(self.api_key, self.api_secret, self.api_passphrase)
@@ -133,7 +137,9 @@ class CoinbaseApiHelper:
         try:
             return response.json()
         except JSONDecodeError as jde:
-            self.logger.error(f"Make Request : JSON Decode Error : {jde}")
+            self.logger.error(
+                f"Make Request : JSON Decode Error : {jde} : Data {response.text}"
+            )
             return None
 
     def get_account(self):
@@ -369,7 +375,7 @@ class CoinbaseApiHelper:
         response = self.make_request("GET", endpoint, params)
         if not response:
             self.logger.error(
-                f"Get Public Trades : Invalid API Response : Endpoint {endpoint} : Params {params}"
+                f"Coinbase Public Trade Generator : Invalid API Response : Endpoint {endpoint} : Params {params}"
             )
             return
         for trade_data in response:
@@ -405,3 +411,40 @@ class CoinbaseApiHelper:
                 f"Get Daily Currency Stats : CoinbaseDailyCurrencyStatModel : TypeError : {str(te)} : Trade Data {stat}"
             )
         return None
+
+    def generate_candles(self, symbol: str, length: CandleLength, start: datetime):
+        granularity = map_coinbase_candle_length(length)
+        if not granularity:
+            self.logger.error(
+                f"Coinbase Generate Candles : Invalid Candle Length : Value {str(length)}"
+            )
+            return
+        max_interval_seconds = self.candle_request_limit * granularity.value
+        end = start + timedelta(seconds=max_interval_seconds)
+        for item in self.client.get_product_historic_rates(
+            symbol, start=start, end=end, granularity=granularity.value
+        ):
+            if len(item) == 6:
+                try:
+                    yield CoinbaseCandleModel(
+                        exchange_id=self.exchange_id,
+                        market_symbol=symbol,
+                        length=length,
+                        time=item[0],
+                        low=item[1],
+                        high=item[2],
+                        open=item[3],
+                        close=item[4],
+                        volume=item[5],
+                    )
+                except ValidationError as ve:
+                    self.logger.error(
+                        f"Coinbase Generate Candles : ValidationError : CoinbaseCandleModel : {ve.json()}"
+                    )
+                    continue
+            else:
+                logging.error(
+                    f"Coinbse Generate Candles : Response Item has Invalid Length : Required 6 : Got {len(item)} : Data {item}"
+                )
+                continue
+        return

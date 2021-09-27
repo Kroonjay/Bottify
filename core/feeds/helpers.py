@@ -1,4 +1,7 @@
 import logging
+from pydantic import parse_obj_as, ValidationError
+from typing import List
+from core.enums.feed_config import FeedConfig
 
 
 def action_wrapper(model, exclude=None, use_id=False, by_alias=False):
@@ -82,3 +85,22 @@ def get_mappings(feed):
         )
         return None
     return {"mappings": {"properties": es_properties}}
+
+
+def has_required_configs(required: list, configs: list):
+    try:
+        req_configs = parse_obj_as(List[FeedConfig], required)
+    except ValidationError as ve:
+        logging.error(
+            f"Feed Has Required Configs : ValidationError : Required Must be a List of FeedConfigs : {ve.json()}"
+        )
+        return False
+    for req_config in req_configs:
+        if req_config.value in configs:
+            continue
+        else:
+            logging.error(
+                f"Feed Has Required Configs : Failure : Missing {req_config} : Required {required}"
+            )
+            return False
+    return True

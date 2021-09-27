@@ -92,10 +92,11 @@ async def refresh_feed(
 @router.get("/feeds/overdue", response_model=List[FeedApiModel])
 async def get_overdue_feeds(database: Database = Depends(get_db)):
     overdue_feeds = await read_overdue_active_feeds(database)
-    if not overdue_feeds:
-        return []
-    else:
-        return [(FeedApiModel(**feed.dict())) for feed in overdue_feeds]
+    out_feeds = []
+    for feed in overdue_feeds:
+        out_feeds.append(FeedApiModel(**feed.dict()))
+    return out_feeds
+    # Using a Dict comprehension will throw an assertion here when calling dict method
 
 
 @router.put("/feed/{feed_id}/configs")
