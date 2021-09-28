@@ -3,8 +3,10 @@ import os
 
 PROJECT_NAME = "Bottify"
 
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 8000
+SERVER_HOST = os.getenv("SERVER_HOST")
+SERVER_PORT = os.getenv("PORT")
+if SERVER_PORT:
+    SERVER_PORT = int(SERVER_PORT)
 
 API_ROUTER_PREFIX = "/api/v1"
 API_BASE_URL = f"http://{SERVER_HOST}:{SERVER_PORT}/api/v1"
@@ -43,7 +45,8 @@ JWT_SUBJECT = "access"
 JWT_PASSPHRASE = os.getenv("JWT_PASSPHRASE")
 JWT_PUBLIC_KEY_FILE = "bottify_jwt.pub"
 JWT_PRIVATE_KEY_FILE = "bottify_jwt.pem"
-
+JWT_PUBLIC_KEY_DATA = os.getenv("BOTTIFY_JWT_PUBLIC_KEY_B64")
+JWT_PRIVATE_KEY_DATA = os.getenv("BOTTIFY_JWT_PRIVATE_KEY_B64")
 
 # Don't fucking touch this
 BALANCE_MAXIMUM_DIGITS = 16
