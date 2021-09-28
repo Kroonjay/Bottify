@@ -27,6 +27,7 @@ nest-asyncio = "*"
 python-jose = "*"
 pandas = "*"
 elasticsearch = "<7.14.0"
+gunicorn = "*"
 
 [requires]
 python_version = "3.8"
