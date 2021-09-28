@@ -146,3 +146,5 @@ cython_debug/
 #Key Material
 bottify_jwt_pt
 bottify_jwt.pem
+bottify_jwt.pub
+cognito_jwks.json
