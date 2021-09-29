@@ -1,6 +1,6 @@
 from pydantic import BaseModel, validator, condecimal
 from datetime import datetime, timezone
-from core.config import BALANCE_MAXIMUM_DIGITS, BALANCE_DECIMAL_PRECISION
+from core.config import settings
 from core.enums.exchanges import Exchange
 from decimal import Decimal, ROUND_DOWN
 import math
@@ -22,7 +22,7 @@ def truncate(number, decimals=0):
     return math.trunc(number * factor) / factor
 
 
-def round_decimal(number, decimal_places=BALANCE_DECIMAL_PRECISION):
+def round_decimal(number, decimal_places=settings.BalanceDecimalPrecision):
     if isinstance(number, Decimal):
         decimal_value = number
     else:
@@ -36,14 +36,14 @@ class CurrencyBalanceInModel(BaseModel):
     available: condecimal(
         ge=0,
         lt=100000000,  # Maximum balance must be under 100 Million (8 digits) in order to maintain 8 decimal places
-        max_digits=BALANCE_MAXIMUM_DIGITS,
-        decimal_places=BALANCE_DECIMAL_PRECISION,
+        max_digits=settings.BalanceMaximumDigits,
+        decimal_places=settings.BalanceDecimalPrecision,
     ) = 0  # Must be greater than or equal to 0, maximum of 32 total digits not including trailing 0's, maximum decimal precision of 8
     reserved: condecimal(
         ge=0,
         lt=100000000,
-        max_digits=BALANCE_MAXIMUM_DIGITS,
-        decimal_places=BALANCE_DECIMAL_PRECISION,
+        max_digits=settings.BalanceMaximumDigits,
+        decimal_places=settings.BalanceDecimalPrecision,
     ) = 0  # Must be greater than or equal to 0, maximum of 32 total digits not including trailing 0's, maximum decimal precision of 8 = 0
     updated_at: datetime = datetime.now(tz=timezone.utc)
 
@@ -68,6 +68,6 @@ class CurrencyBalanceModel(CurrencyBalanceInModel):
     total: condecimal(
         ge=0,
         lt=100000000,
-        max_digits=BALANCE_MAXIMUM_DIGITS,
-        decimal_places=BALANCE_DECIMAL_PRECISION,
+        max_digits=settings.BalanceMaximumDigits,
+        decimal_places=settings.BalanceDecimalPrecision,
     )

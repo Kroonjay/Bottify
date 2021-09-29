@@ -10,13 +10,7 @@ from elasticsearch.helpers import streaming_bulk
 import json
 from typing import Dict
 import logging
-from core.config import (
-    ELASTICSEARCH_BASE_URL,
-    ELASTICSEARCH_HOST,
-    ELASTICSEARCH_API_TIMEOUT_SECONDS,
-    AWS_ACCESS_KEY,
-    AWS_SECRET_KEY,
-)
+from core.config import settings
 from core.elasticsearch.transformers import transform_monitor
 from core.elasticsearch.utils import get_aws_auth
 
@@ -24,10 +18,10 @@ from core.elasticsearch.utils import get_aws_auth
 class ElasticApiHelper:
     def __init__(self):
         self.logger = logging.getLogger("Bottify.ElasticApi")
-        self.host = ELASTICSEARCH_HOST
-        self.base_url = ELASTICSEARCH_BASE_URL
-        self.aws_access_key = AWS_ACCESS_KEY
-        self.aws_secret_key = AWS_SECRET_KEY
+        self.host = settings.ElasticHost.host
+        self.base_url = str(settings.ElasticHost)
+        self.aws_access_key = settings.AwsAccessKey
+        self.aws_secret_key = settings.AlertSecretKey
         self.aws_service = "es"
         self.port = 443
         self.use_ssl = True
@@ -65,7 +59,7 @@ class ElasticApiHelper:
             params=params,
             data=data,
             headers=headers,
-            timeout=ELASTICSEARCH_API_TIMEOUT_SECONDS,
+            timeout=30,
         )
         if not response.ok:
             self.logger.error(

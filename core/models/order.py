@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from typing import Optional
 from core.enums.statuses import BottifyStatus
 from core.enums.orders import OrderDirection, OrderTimeInForce, OrderType
-from core.config import BALANCE_MAXIMUM_DIGITS, BALANCE_DECIMAL_PRECISION
+from core.config import settings
 from core.models.balance import round_decimal
 
 
@@ -19,15 +19,15 @@ class BottifyOrderCreateModel(BaseModel):
         condecimal(
             ge=0,
             lt=100000000,
-            max_digits=BALANCE_MAXIMUM_DIGITS,
-            decimal_places=BALANCE_DECIMAL_PRECISION,
+            max_digits=settings.BalanceMaximumDigits,
+            decimal_places=settings.BalanceDecimalPrecision,
         )
     ] = 0  # Price is only relevant for limit orders
     quantity: condecimal(
         ge=0,
         lt=100000000,
-        max_digits=BALANCE_MAXIMUM_DIGITS,
-        decimal_places=BALANCE_DECIMAL_PRECISION,
+        max_digits=settings.BalanceMaximumDigits,
+        decimal_places=settings.BalanceDecimalPrecision,
     ) = 0
     time_in_force: OrderTimeInForce = OrderTimeInForce.GoodTilCancelled
 

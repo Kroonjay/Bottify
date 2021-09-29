@@ -3,10 +3,7 @@ import asyncio
 from hashlib import sha512
 from uuid import UUID
 from pydantic import ValidationError
-from core.config import (
-    BITTREX_BASE_URL,
-    BITTREX_API_TIMEOUT_SECONDS,
-)
+
 from core.enums.http_request_types import HttpRequestType
 from core.exchanges.bittrex.models import (
     BittrexBalanceModel,
@@ -72,7 +69,7 @@ class BittrexApiHelper:
         self.api_secret = exchange.auth.get("api_secret")
         self.session = Session()
         self.is_ready = False
-        self.timeout = BITTREX_API_TIMEOUT_SECONDS
+        self.timeout = 30
         self.sequence_header_name = (
             "Sequence"  # Used for Head requests to return current sequence value
         )

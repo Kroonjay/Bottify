@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 from fastapi.responses import JSONResponse
 from databases import Database
 from typing import Optional, List
-from core.config import ALERT_SECRET_KEY
+from core.config import settings
 from core.enums.statuses import BottifyStatus
 from core.database.database import get_db
 from core.database.crud.alert import read_all_alerts, create_alert, read_alert_by_id
@@ -19,7 +19,7 @@ router = APIRouter()
 
 
 def alert_secret_key_is_valid(sk_in: str):
-    return True if sk_in == ALERT_SECRET_KEY else False
+    return True if sk_in == settings.AlertSecretKey else False
 
 
 @router.post("/alert/hook")

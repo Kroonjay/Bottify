@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from core.config import BALANCE_DECIMAL_PRECISION, BALANCE_MAXIMUM_DIGITS
+from core.config import settings
 
 
 def get_trade_table(meta=None):
@@ -19,30 +19,30 @@ def get_trade_table(meta=None):
         sa.Column(
             "price",
             sa.Numeric(
-                precision=BALANCE_MAXIMUM_DIGITS,
-                scale=BALANCE_DECIMAL_PRECISION,
+                precision=settings.BalanceMaximumDigits,
+                scale=settings.BalanceDecimalPrecision,
                 asdecimal=True,
-                decimal_return_scale=BALANCE_DECIMAL_PRECISION,
+                decimal_return_scale=settings.BalanceDecimalPrecision,
             ),
             nullable=False,
         ),
         sa.Column(
             "quantity",
             sa.Numeric(
-                precision=BALANCE_MAXIMUM_DIGITS,
-                scale=BALANCE_DECIMAL_PRECISION,
+                precision=settings.BalanceMaximumDigits,
+                scale=settings.BalanceDecimalPrecision,
                 asdecimal=True,
-                decimal_return_scale=BALANCE_DECIMAL_PRECISION,
+                decimal_return_scale=settings.BalanceDecimalPrecision,
             ),
             nullable=False,
         ),
         sa.Column(
             "fee",
             sa.Numeric(
-                precision=BALANCE_MAXIMUM_DIGITS,
-                scale=BALANCE_DECIMAL_PRECISION,
+                precision=settings.BalanceMaximumDigits,
+                scale=settings.BalanceDecimalPrecision,
                 asdecimal=True,
-                decimal_return_scale=BALANCE_DECIMAL_PRECISION,
+                decimal_return_scale=settings.BalanceDecimalPrecision,
             ),
             nullable=False,
         ),

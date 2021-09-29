@@ -9,7 +9,6 @@ from cbpro import AuthenticatedClient
 from pydantic import ValidationError
 from core.enums.candle_length import CandleLength
 from core.exchanges.coinbase.enums import CoinbaseOrderStatus
-from core.config import COINBASE_BASE_URL, COINBASE_API_TIMEOUT_SECONDS
 from core.exchanges.coinbase.models import (
     CoinbaseBalanceModel,
     CoinbaseMarketModel,
@@ -96,7 +95,7 @@ class CoinbaseApiHelper:
                 f"API Passphrase is None : Required Key is 'api_passphrase'"
             )
             return
-        self.timeout = COINBASE_API_TIMEOUT_SECONDS
+        self.timeout = 30
         self.session = Session()
         self.client = AuthenticatedClient(
             self.api_key, self.api_secret, self.api_passphrase, api_url=self.base_url

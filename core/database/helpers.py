@@ -7,7 +7,7 @@ from asyncpg.exceptions import (
 from pydantic import BaseModel, ValidationError
 from databases import Database
 
-from core.configs.db_config import MAIN_DB_CONN_STRING
+from core.config import settings
 from core.database.tables.feeds import get_feeds_table
 from core.database.tables.alert import get_alert_table
 from core.database.tables.bottify_user import get_bottify_user_table
@@ -31,7 +31,7 @@ import logging
 
 
 def create_tables():
-    engine = sa.create_engine(MAIN_DB_CONN_STRING)
+    engine = sa.create_engine(settings.MainDatabase)
     meta = sa.MetaData()
     get_bottify_user_table(meta)
     get_feeds_table(meta)

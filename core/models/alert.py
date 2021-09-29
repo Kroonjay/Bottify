@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 import json
 import logging
-from core.config import BALANCE_DECIMAL_PRECISION, BALANCE_MAXIMUM_DIGITS
+from core.config import settings
 from core.enums.exchanges import Exchange
 from core.enums.statuses import BottifyStatus
 from core.enums.alert_type import AlertType
@@ -23,8 +23,8 @@ class AlertCreateModel(BaseModel):
         condecimal(
             ge=0,
             lt=100000000,  # Maximum balance must be under 100 Million (8 digits) in order to maintain 8 decimal places
-            max_digits=BALANCE_MAXIMUM_DIGITS,
-            decimal_places=BALANCE_DECIMAL_PRECISION,
+            max_digits=settings.BalanceMaximumDigits,
+            decimal_places=settings.BalanceDecimalPrecision,
         )
     ] = None
 

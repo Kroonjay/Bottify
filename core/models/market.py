@@ -3,7 +3,7 @@ from pydantic import BaseModel, validator, condecimal
 from datetime import datetime, timezone
 from typing import Optional, List
 from core.enums.statuses import BottifyStatus
-from core.config import BALANCE_DECIMAL_PRECISION, BALANCE_MAXIMUM_DIGITS
+from core.config import settings
 
 
 class MarketCreateModel(BaseModel):
@@ -14,8 +14,8 @@ class MarketCreateModel(BaseModel):
     min_trade_size: condecimal(
         ge=0,
         lt=100000000,
-        max_digits=BALANCE_MAXIMUM_DIGITS,
-        decimal_places=BALANCE_DECIMAL_PRECISION,
+        max_digits=settings.BalanceMaximumDigits,
+        decimal_places=settings.BalanceDecimalPrecision,
     )
     tags: Optional[List[str]] = None
 

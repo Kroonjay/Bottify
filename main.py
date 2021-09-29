@@ -6,18 +6,10 @@ import uvicorn
 
 from core.api.api import api_router
 from core.database.database import get_db
-from core.config import (
-    PROJECT_NAME,
-    SERVER_HOST,
-    SERVER_PORT,
-    DEBUG_ENABLED,
-    API_ROUTER_PREFIX,
-    TOKEN_URL_PREFIX,
-    OPENAPI_URL_PREFIX,
-)
+from core.config import settings
 
-app = FastAPI(title=PROJECT_NAME, openapi_url=OPENAPI_URL_PREFIX)
-app.include_router(api_router, prefix=API_ROUTER_PREFIX)
+app = FastAPI(title=settings.ProjectName, openapi_url=settings.OpenApiUrlPrefix)
+app.include_router(api_router, prefix=settings.ApiPrefix)
 
 
 @app.on_event("startup")
@@ -33,7 +25,12 @@ async def shutdown():
 
 
 def main():
-    uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT, debug=DEBUG_ENABLED)
+    uvicorn.run(
+        app,
+        host=str(settings.ServerHost),
+        port=settings.Port,
+        debug=settings.DebugEnabled,
+    )
 
 
 if __name__ == "__main__":

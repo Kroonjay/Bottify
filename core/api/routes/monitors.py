@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from databases import Database
 from typing import List, Optional
-from core.config import ALERT_SECRET_KEY
 from core.worker import bottify_worker
 from core.database.database import get_db
 from core.models.user import BottifyUserModel

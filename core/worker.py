@@ -44,26 +44,22 @@ from core.database.crud.balance import (
     update_balance,
 )
 from core.database.crud.market import read_market_by_id
-from core.config import (
-    CELERY_WORKER_NAME,
-    CELERY_BROKER_URL,
-    CELERY_RESULT_BACKEND_URL,
-    MAIN_DB_CONN_STRING,
-)
+from core.config import settings
 from core.elasticsearch.utils import bulk_index
 import nest_asyncio  # Required in order to call and execute async tasks from inside a running event loop
 
 nest_asyncio.apply()
 
-bottify_worker = Celery(CELERY_WORKER_NAME)
-bottify_worker.conf.broker_url = CELERY_BROKER_URL
-bottify_worker.result_backend = CELERY_RESULT_BACKEND_URL
-bottify_worker.task_default_queue = "main"
+bottify_worker = Celery(settings.CeleryWorkerName)
+bottify_worker.conf.broker_url = str(settings.CeleryBroker)
+bottify_worker.result_backend = str(settings.CeleryResultBackend)
+bottify_worker.task_default_queue = settings.CeleryDefaultQueue
 bottify_worker.conf.task_queues = (
-    Queue("main"),
-    Queue("trade_tasks"),
-    Queue("feed_tasks"),
+    Queue(settings.CeleryDefaultQueue),
+    Queue(settings.CeleryTradeTaskQueue),
+    Queue(settings.CeleryFeedTaskQueue),
 )
+# TODO Update this
 bottify_worker.conf.task_routes = {
     "core.worker.refresh_feed": {
         "queue": "feed_tasks",
@@ -80,7 +76,7 @@ bottify_worker.conf.task_routes = {
     "core.worker.refresh_overdue_feeds": {"queue": "main"},
 }
 
-bottify_worker.task_default_exchange_type = "direct"
+bottify_worker.task_default_exchange_type = settings.CeleryDefaultExchangeType
 bottify_worker.autodiscover_tasks()
 
 

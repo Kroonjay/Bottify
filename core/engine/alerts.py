@@ -2,7 +2,6 @@ import logging
 from pydantic import ValidationError
 from databases import Database
 from decimal import Decimal
-from core.config import SERVER_HOST, API_ROUTER_PREFIX
 from core.database.database import create_db
 from core.database.crud.alert import read_alert_by_id
 from core.database.crud.subscription import read_subscriptions_by_monitor_id

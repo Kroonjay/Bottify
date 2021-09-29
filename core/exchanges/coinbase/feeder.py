@@ -13,11 +13,10 @@ from core.exchanges.coinbase.models import (
 from core.enums.feed_sources import FeedSources
 from core.models.market import MarketModel
 from core.database.crud.feeds import read_active_feed_by_type
-from core.config import API_BASE_URL
 from core.database.database import create_db
 from pydantic import ValidationError
 
-
+# TODO This needs to be updated to use the Database rather than the API
 class CoinbaseSocketFeeder(cbpro.WebsocketClient):
     def __init__(self, *args, **kwargs):
         configs = kwargs.pop("configs")
@@ -35,15 +34,14 @@ class CoinbaseSocketFeeder(cbpro.WebsocketClient):
                 f"Init : CoinbaseSocketFeederConfig : Required Config 'ticker_index_name' not Provided"
             )
             return
-        if not API_BASE_URL:
-            logging.critical("Init : API_BASE_URL is Required to Fetch Products")
-            return
         kwargs.update({"channels": self.configs.channels})
         super(CoinbaseSocketFeeder, self).__init__(*args, **kwargs)
 
     def set_products(self):
         self.products = []
-        endpoint = f"{API_BASE_URL}/markets/exchange/{self.configs.exchange_id}"
+        endpoint = (
+            f"http://127.0.0.1/api/v1/markets/exchange/{self.configs.exchange_id}"
+        )
         response = requests.get(endpoint, timeout=30)
         for item in response.json():
             try:

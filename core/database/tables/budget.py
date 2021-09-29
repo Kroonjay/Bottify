@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from core.config import BALANCE_DECIMAL_PRECISION, BALANCE_MAXIMUM_DIGITS
+from core.config import settings
 
 
 def get_budget_table(meta=None):
@@ -17,30 +17,30 @@ def get_budget_table(meta=None):
         sa.Column(
             "available",
             sa.Numeric(
-                precision=BALANCE_MAXIMUM_DIGITS,
-                scale=BALANCE_DECIMAL_PRECISION,
+                precision=settings.BalanceMaximumDigits,
+                scale=settings.BalanceDecimalPrecision,
                 asdecimal=True,
-                decimal_return_scale=BALANCE_DECIMAL_PRECISION,
+                decimal_return_scale=settings.BalanceDecimalPrecision,
             ),
             nullable=False,
         ),
         sa.Column(
             "reserved",
             sa.Numeric(
-                precision=BALANCE_MAXIMUM_DIGITS,
-                scale=BALANCE_DECIMAL_PRECISION,
+                precision=settings.BalanceMaximumDigits,
+                scale=settings.BalanceDecimalPrecision,
                 asdecimal=True,
-                decimal_return_scale=BALANCE_DECIMAL_PRECISION,
+                decimal_return_scale=settings.BalanceDecimalPrecision,
             ),
             nullable=False,
         ),
         sa.Column(
             "total",
             sa.Numeric(
-                precision=BALANCE_MAXIMUM_DIGITS,
-                scale=BALANCE_DECIMAL_PRECISION,
+                precision=settings.BalanceMaximumDigits,
+                scale=settings.BalanceDecimalPrecision,
                 asdecimal=True,
-                decimal_return_scale=BALANCE_DECIMAL_PRECISION,
+                decimal_return_scale=settings.BalanceDecimalPrecision,
             ),
             sa.Computed("available + reserved"),
             nullable=False,
